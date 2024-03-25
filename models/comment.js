@@ -6,7 +6,6 @@ const mongoose = require('mongoose')
             comment_user: { type: mongoose.Types.ObjectId, ref: "users" },
 		     text: {type: String, required: true},
 			 date: {type: Date, default: Date.now},
-			
 		 }
 	 ],
 	date:{type: Date, default:Date.now}

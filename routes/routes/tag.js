@@ -2,7 +2,6 @@ const Tag = require("../../models/tag");
 const multer = require("multer");
 const path = require("path");
 const PORT = 3007;
-const FILE_PATH  = `http://127.0.0.1:${PORT}/postimage/`;
 
 const routes = function (app) {
     app.get('/tag', async function(req,res){
@@ -14,19 +13,6 @@ const routes = function (app) {
 			res.status(500).send(err.message)
 		}
 	});
-
-	// app.get('/tag', async function(req, res) {
-	// 	try {
-	// 	  const tags = await Tag.find().populate('posts').lean();
-	// 	  const tagsWithPostCount = tags.map(tag => ({
-	// 		...tag,
-	// 		postCount: tag.posts.length
-	// 	  }));
-	// 	  res.json(tagsWithPostCount);
-	// 	} catch (err) {
-	// 	  res.status(500).send(err.message);
-	// 	}
-	//   });
 	  
 	app.get('/tag/:id', async function(req,res){
 		try{
@@ -87,17 +73,26 @@ const routes = function (app) {
 			}
 	});
 
-	app.post('/tag', async function(req,res){
-		try{
-			let tag = new Tag(req.body)
-			tag.post = req.body.post;
-			// console.log(tag.post)
-			await tag.save()
-			res.json(tag)
-		}catch(err){
-			res.status(500).send(err.message)
+	app.post('/tag', async (req, res) => {
+		try {
+		  const tagData = req.body;
+		  if (typeof tagData.name === 'string' && tagData.name.startsWith('{') && tagData.name.endsWith('}')) {
+			try {
+			  const parsedTitle = JSON.parse(tagData.name);
+			  tagData.name = parsedTitle.name; // Assuming "name" is the property for the actual title
+			} catch (err) {
+			  // Handle parsing error (optional)
+			}
+		  }
+	  
+		  const tag = new Tag(tagData);
+		  await tag.save();
+		  res.json(tag);
+		} catch (err) {
+		  res.status(500).send(err.message);
 		}
-	})
+	  });
+	  
  
 }
 module.exports = routes

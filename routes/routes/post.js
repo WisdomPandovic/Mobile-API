@@ -57,36 +57,6 @@ const routes = function (app) {
 			res.status(500).send(err.message)
 		}
 	});
-
-
-    app.post('/post', postimage.any(), async function(req, res) {
-    try {
-        console.log('received request', req.body);
-        console.log('received files', req.files);
-
-        const { title, description, tag, user } = req.body;
-
-        let post = new Post({
-            title,
-            description,
-            tag,
-            user: user, 
-            image: FILE_PATH + req.files[0].filename, 
-			views: 0
-        });
-
-        console.log('post created:', post);
-        await post.save();
-
-        await User.findByIdAndUpdate(user, { $push: { post: post._id } });
-
-		await Tag.findByIdAndUpdate(tag, { $push: { post: post._id } });
-
-        res.json({ msg: "post created", code: 200 });
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-    });
 	
 	app.put('/post/:id', async function(req,res){
 		try{
@@ -157,8 +127,7 @@ const routes = function (app) {
 		  console.error(err.message);
 		  res.status(500).send({ msg: "Internal server error" });
 		}
-	  });
-	  
+	  });	  
 
 	app.put('/unlike/:id', async (req, res) => {
 		try {
@@ -194,37 +163,37 @@ const routes = function (app) {
 		  res.status(500).send({ msg: "Internal server error" });
 		}
 	  });
-	  
-    app.post('/comment/:id', async (req,res)=>{
-		try{
-			const {id} = req.params
+
+	app.post('/comment/:id', async (req, res) => {
+		try {
+			const { id } = req.params;
 			const post = await Post.findById(id).populate('user');
-            console.log(post)
-
-			 if (!mongoose.Types.ObjectId.isValid(req.body.comment_user.id)) {
+	
+			// Extract the user ID from the object
+			const userId = req.body.comment_user.id;
+	
+			if (!mongoose.Types.ObjectId.isValid(userId)) {
 				return res.status(400).json({ msg: 'Invalid user ID' });
-			  }
-
-            const newComment ={
-                text: req.body.text,
-                // avatar:req.body.avatar,
-                // comment_user: req.body.user , 
-				comment_user: req.body.comment_user.id,
-				
-            };
-			console.log( newComment)
-			console.log('comment_user.id:', req.body.comment_user.id);
-
-            post.comments.unshift(newComment);
-            
-            await post.save();
-			res.json(post)
-			console.log(post)
-		}catch(err){
-            console.log(err.message);
-			res.status(500).send({msg:"internal server error"});
+			}
+	
+			const newComment = {
+				text: req.body.text,
+				comment_user: userId, // Use the extracted user ID
+			};
+	
+			console.log(newComment);
+			console.log('comment_user.id:', userId);
+	
+			post.comments.unshift(newComment);
+	
+			await post.save();
+			res.json(post);
+			console.log(post);
+		} catch (err) {
+			console.log(err.message);
+			res.status(500).send({ msg: "internal server error" });
 		}
-	})
+	});
 
     app.get("/comments", async function (req, res) {
     try {
@@ -242,9 +211,7 @@ const routes = function (app) {
     }
     });
 
-
-
-	  app.get('/comment/:id', async (req,res)=>{
+	app.get('/comment/:id', async (req,res)=>{
 		try {
 		  const {id} = req.params;
 		let post = await Post.findById(id)
@@ -252,7 +219,7 @@ const routes = function (app) {
 		} catch (error) {
 		  res.status(500).send(error.message);
 		}
-	  })
+	})
 	  
 	app.get('/post/tag/:tagId', async (req, res) => {
 		try {
@@ -324,8 +291,7 @@ const routes = function (app) {
 			console.error('Error while incrementing post views:', err);
 			res.status(500).json({ err: 'Error while incrementing post views' });
 		}
-	});
-	
+	});	
 
 	app.get('/posts-with-users', async function(req, res) {
 		try {
@@ -338,8 +304,48 @@ const routes = function (app) {
 		} catch (err) {
 		  res.status(500).send(err.message);
 		}
+	});
+  
+    app.post('/post', postimage.any(), async function(req, res) {
+	try {
+	  console.log('received request', req.body);
+	  console.log('received files', req.files);
+  
+	  // Parse the tag field as JSON (assuming the property is 'tag')
+	  const { title, description, tag, user } = req.body; // Destructure including 'title'
+	  const parsedTag = JSON.parse(tag); // Parse the received tag string into an object
+  
+	  console.log('parsedTag:', parsedTag);
+  
+	  // Check if the tag exists in the database
+	  let existingTag = await Tag.findById(parsedTag._id); // Use the tag ID to find the tag
+	  let tagId;
+  
+	  if (!existingTag) {
+		console.error('Tag not found');
+		return res.status(404).json({ msg: 'Tag not found' });
+	  }
+  
+	  let post = new Post({
+		title,
+		description,
+		tag: existingTag._id, // Associate the post with the existing tag
+		user,
+		image: FILE_PATH + req.files[0].filename,
+		views: 0
 	  });
-	
+  
+	  console.log('post created:', post);
+	  await post.save();
+  
+	  await Tag.findByIdAndUpdate(existingTag._id, { $push: { post: post._id } }); // Update the tag with the new post ID
+  
+	  res.json({ msg: "post created", code: 200 });
+	} catch (err) {
+	  console.error('Error creating post:', err);
+	  res.status(500).send(err.message);
+	}
+  });
 }
 
 module.exports = routes

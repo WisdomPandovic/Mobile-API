@@ -1,6 +1,18 @@
 const User = require('../../models/user')
 const bcrypt = require('bcryptjs')
 const Post=require("../../models/post");
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+
+const app = express();
+
+app.use(express.json());
+app.use(session({
+  secret: '86910a557aa1ecc5021d0ed6367aa6c154ef652366c1c20e8965ba57b5a105c5', // Set a secret key for session encryption
+  resave: false,
+  saveUninitialized: false,
+}));
 
 const routes = function(app){
 	app.get('/',function(req,res){
@@ -29,37 +41,25 @@ const routes = function(app){
 		}
 	})
 
-	// app.post('/users', async function(req,res){
-	// 	try{
-	// 		let user = new User(req.body)
-	// 		await user.save()
-	// 		res.json(user)
-	// 		if(!user){
-	// 			res.status(400).send("All input is required");
-	// 		}
-	// 	}catch(err){
-	// 		res.status(500).send(err.message)
-	// 	}
-	// })
-
-	app.post("/users", async function(req,res){
-        try{
-            const {username, email, phoneNumber, password,  role,} = req.body
-            const user = new User({
-                username,
-                email:email.toLowerCase(),
-                phoneNumber,
-                password,  
-                role, 
-            })
-    
-			await user.save()
-           
-                res.json(user)
-		}catch(err){
-			res.status(500).send(err.message)
+	app.post("/users", async function(req, res) {
+		try {
+		  const { username, email, phoneNumber, password, role } = req.body;
+	  
+		  const user = new User({
+			username,
+			email: email.toLowerCase(),
+			phoneNumber,
+			password, 
+			role,
+		  });
+	  
+		  await user.save();
+	  
+		  res.json(user);
+		} catch (err) {
+		  res.status(500).send(err.message);
 		}
-    })
+	  });
 
 	app.put('/users/:id', async function(req,res){
 		try{
@@ -104,31 +104,38 @@ const routes = function(app){
 		}
 	});
 
-	app.post('/login', async function(req, res) {
+	app.post('/login', async function (req, res) {
 		try {
 			const { username, password } = req.body;
-
-			let user = await User.findOne({ username, password });
+			console.log("Received login request with username:", username, "and password:", password);
+	
+			// Find the user by username
+			const user = await User.findOne({ username });
+			console.log("Retrieved user from database:", user);
 	
 			if (!user) {
-				return res.status(404).json({ msg: "Invalid user", code: 404 });
+				console.log("User not found in the database");
+				return res.status(404).json({ msg: 'Invalid username or password' });
 			}
-			user.lastLogin = new Date();
-			await user.save();
 	
-			let data = {
-				username: user.username,
-				phoneNumber: user.phoneNumber,
-				email: user.email,
-				id: user._id,
-				active: true,
-				lastLogin: user.lastLogin.toISOString(),
-			};
+			console.log("Retrieved hashed password from the database:", user.password);
 	
-			res.json({ msg: "Login successful", data });
-		} catch (err) {
-			console.error(err);
-			res.status(500).json({ msg: "Internal server error occurred", error: err.message });
+			// Compare the plain text password from the request with the hashed password stored in the database
+			const isPasswordValid = await bcrypt.compare(password, user.password);
+			console.log("Password comparison result:", isPasswordValid);
+	
+			if (isPasswordValid) {
+				// Passwords match, handle successful login
+				// Optionally, you can include user details in the response
+				res.json({ success: true, msg: 'Login successful', user });
+			} else {
+				// Passwords don't match, handle unsuccessful login
+				console.log("Password is invalid");
+				res.status(401).json({ msg: 'Invalid username or password' });
+			}
+		} catch (error) {
+			console.error("Error occurred during login:", error);
+			res.status(500).json({ msg: 'Internal server error occurred' });
 		}
 	});
 	
