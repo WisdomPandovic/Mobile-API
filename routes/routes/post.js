@@ -94,8 +94,13 @@ const routes = function (app) {
 	app.put('/likes/:id', async (req, res) => {
 		try {
 		  const { id } = req.params;
+		  console.log('Request received to like post with ID:', id);
+
 		  const post = await Post.findById(id);
+		  console.log('Retrieved post:', post);
+
 		  const { user } = req.body; 
+		  console.log('User ID from request body:', user);
 	  
 		  if (!user) {
 			return res.status(400).json({ msg: "User ID is required in the request body", code: 400 });
@@ -220,6 +225,124 @@ const routes = function (app) {
 		  res.status(500).send(error.message);
 		}
 	})
+	
+	app.post('/reply/:id', async (req, res) => {
+		try {
+			const { id } = req.params;
+			const post = await Post.findById(id).populate('user');
+	
+			// Extract the user ID from the object
+			const userId = req.body.reply_user.id;
+	
+			// Validate the user ID
+			if (!mongoose.Types.ObjectId.isValid(userId)) {
+				return res.status(400).json({ msg: 'Invalid user ID' });
+			}
+	
+			// Find the comment ID from the request body
+			const { comment_id } = req.body;
+	
+			// Find the comment to which the reply will be added
+			const comment = post.comments.find(comment => comment._id.toString() === comment_id);
+	
+			if (!comment) {
+				return res.status(404).json({ msg: 'Comment not found' });
+			}
+	
+			const newReply = {
+				text: req.body.text,
+				reply_user: userId, // Use the extracted user ID
+			};
+	
+			// Add the new reply to the replies array of the comment
+			comment.replies.unshift(newReply);
+	
+			await post.save();
+			res.json(post);
+		} catch (err) {
+			console.log(err.message);
+			res.status(500).send({ msg: "Internal server error" });
+		}
+	});
+
+	app.put('/replylikes/:id/:commentId', async (req, res) => {
+		try {
+			const { id, commentId } = req.params;
+			console.log('Request received to like comment with ID:', commentId, 'in post with ID:', id);
+	
+			const post = await Post.findById(id);
+	
+			if (!post) {
+				return res.status(404).json({ msg: "Post does not exist", code: 404 });
+			}
+	
+			const comment = post.comments.id(commentId);
+	
+			if (!comment) {
+				return res.status(404).json({ msg: "Comment does not exist", code: 404 });
+			}
+	
+			const { user } = req.body;
+			console.log('User ID from request body:', user);
+	
+			if (!user) {
+				return res.status(400).json({ msg: "User ID is required in the request body", code: 400 });
+			}
+	
+			const existingLike = comment.likes.find(like => like.equals(user));
+	
+			if (existingLike) {
+				return res.json({ msg: "Comment already liked by this user" });
+			}
+	
+			comment.likes.push(user);
+			await post.save();
+			res.json(comment.likes);
+		} catch (err) {
+			console.error(err.message);
+			res.status(500).send({ msg: "Internal server error" });
+		}
+	});
+	
+	app.put('/replyunlikes/:id/:commentId', async (req, res) => {
+		try {
+			const { id, commentId } = req.params;
+			console.log('Request received to unlike comment with ID:', commentId, 'in post with ID:', id);
+	
+			const post = await Post.findById(id);
+	
+			if (!post) {
+				return res.status(404).json({ msg: "Post does not exist", code: 404 });
+			}
+	
+			const comment = post.comments.id(commentId);
+	
+			if (!comment) {
+				return res.status(404).json({ msg: "Comment does not exist", code: 404 });
+			}
+	
+			const { user } = req.body;
+			console.log('User ID from request body:', user);
+	
+			if (!user) {
+				return res.status(400).json({ msg: "User ID is required in the request body", code: 400 });
+			}
+	
+			const existingLikeIndex = comment.likes.findIndex(like => like.equals(user));
+	
+			if (existingLikeIndex === -1) {
+				return res.json({ msg: "Comment has not been liked by this user" });
+			}
+	
+			comment.likes.splice(existingLikeIndex, 1);
+			await post.save();
+			res.json(comment.likes);
+		} catch (err) {
+			console.error(err.message);
+			res.status(500).send({ msg: "Internal server error" });
+		}
+	});
+	
 	  
 	app.get('/post/tag/:tagId', async (req, res) => {
 		try {

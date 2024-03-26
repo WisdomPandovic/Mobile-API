@@ -11,7 +11,13 @@ const PostSchema = new mongoose.Schema({
     comments: [{
         text: { type: String, required: true },
         date: { type: Date, default: Date.now },
-        comment_user: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
+        comment_user: { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
+        likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'users' }],
+        replies: [{
+            text: { type: String, required: true },
+            date: { type: Date, default: Date.now },
+            reply_user: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
+        }],
     }],
     date: { type: Date, default: Date.now }
 });
