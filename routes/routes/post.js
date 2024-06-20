@@ -430,47 +430,84 @@ const postimage = multer({storage: storage});
 		  res.status(500).send(err.message);
 		}
 	});
+
+	router.post('/post', postimage.any(), async function(req, res) {
+		try {
+		  console.log('received request', req.body);
+		  console.log('received files', req.files);
+	  
+		  const { title, description, tag, user } = req.body;
+	  
+		  // Validate or find tag by name
+		  let existingTag = await Tag.findOne({ name: tag });
+	  
+		  if (!existingTag) {
+			console.error('Tag not found');
+			return res.status(404).json({ msg: 'Tag not found' });
+		  }
+	  
+		  let post = new Post({
+			title,
+			description,
+			tag: existingTag._id,
+			user,
+			image: FILE_PATH + req.files[0].filename,
+			views: 0
+		  });
+	  
+		  console.log('post created:', post);
+		  await post.save();
+	  
+		  // Update the tag with the new post ID
+		  await Tag.findByIdAndUpdate(existingTag._id, { $push: { post: post._id } });
+	  
+		  res.json({ msg: "post created", code: 200 });
+		} catch (err) {
+		  console.error('Error creating post:', err);
+		  res.status(500).send(err.message);
+		}
+	  });	  
   
-    router.post('/post', postimage.any(), async function(req, res) {
-	try {
-	  console.log('received request', req.body);
-	  console.log('received files', req.files);
+//     router.post('/post', postimage.any(), async function(req, res) {
+// 	try {
+// 	  console.log('received request', req.body);
+// 	  console.log('received files', req.files);
   
-	  // Parse the tag field as JSON (assuming the property is 'tag')
-	  const { title, description, tag, user } = req.body; // Destructure including 'title'
-	  const parsedTag = JSON.parse(tag); // Parse the received tag string into an object
+// 	  // Parse the tag field as JSON (assuming the property is 'tag')
+// 	  const { title, description, tag, user } = req.body; // Destructure including 'title'
+// 	  const parsedTag = JSON.parse(tag); // Parse the received tag string into an object
   
-	  console.log('parsedTag:', parsedTag);
+// 	  console.log('parsedTag:', parsedTag);
   
-	  // Check if the tag exists in the database
-	  let existingTag = await Tag.findById(parsedTag._id); // Use the tag ID to find the tag
-	  let tagId;
+// 	  // Check if the tag exists in the database
+// 	  let existingTag = await Tag.findById(parsedTag._id); // Use the tag ID to find the tag
+// 	  let tagId;
   
-	  if (!existingTag) {
-		console.error('Tag not found');
-		return res.status(404).json({ msg: 'Tag not found' });
-	  }
+// 	  if (!existingTag) {
+// 		console.error('Tag not found');
+// 		return res.status(404).json({ msg: 'Tag not found' });
+// 	  }
   
-	  let post = new Post({
-		title,
-		description,
-		tag: existingTag._id, // Associate the post with the existing tag
-		user,
-		image: FILE_PATH + req.files[0].filename,
-		views: 0
-	  });
+// 	  let post = new Post({
+// 		title,
+// 		description,
+// 		tag: existingTag._id, // Associate the post with the existing tag
+// 		user,
+// 		image: FILE_PATH + req.files[0].filename,
+// 		views: 0
+// 	  });
   
-	  console.log('post created:', post);
-	  await post.save();
+// 	  console.log('post created:', post);
+// 	  await post.save();
   
-	  await Tag.findByIdAndUpdate(existingTag._id, { $push: { post: post._id } }); // Update the tag with the new post ID
+// 	  await Tag.findByIdAndUpdate(existingTag._id, { $push: { post: post._id } }); // Update the tag with the new post ID
   
-	  res.json({ msg: "post created", code: 200 });
-	} catch (err) {
-	  console.error('Error creating post:', err);
-	  res.status(500).send(err.message);
-	}
-  });
+// 	  res.json({ msg: "post created", code: 200 });
+// 	} catch (err) {
+// 	  console.error('Error creating post:', err);
+// 	  res.status(500).send(err.message);
+// 	}
+//   });
 // }
 
 module.exports = router;
