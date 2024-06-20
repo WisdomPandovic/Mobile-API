@@ -5,7 +5,7 @@ const app = express()
 
 const PORT  =process.env.PORT || 3007;
 // const DB_URL = "mongodb://127.0.0.1:27017/imgur-blog"
-const DB_URL = process.env.DB_URL || "mongodb://127.0.0.1:27017/imgur-blog";
+const DB_URL = process.env.DB_URL
 const routes = require('./routes/app')
 const path = require('path')
 
