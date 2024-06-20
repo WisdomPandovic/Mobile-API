@@ -39,7 +39,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const userRoutes = require('./routes/user'); // Adjust the path as necessary
+const userRoutes = require('./routes/routes/user');  // Adjust the path as necessary
 
 const app = express();
 
