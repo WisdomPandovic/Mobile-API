@@ -7,6 +7,7 @@ const FILE_PATH = `http://localhost:${PORT}/postimage/`;
 const User=require("../../models/user");
 const Tag=require("../../models/tag");
 const Like = require("../../models/like"); 
+const router = express.Router();
 
 const storage = multer.diskStorage({
     destination: (reg, file, cb)=> {

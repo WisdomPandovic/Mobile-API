@@ -39,7 +39,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
-const userRoutes = require('./routes/routes/user');  // Adjust the path as necessary
+const userRoutes = require('./routes/routes/user'); 
+const postRoutes = require('./routes/routes/post'); // Adjust the path as necessary
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use('/postimage', express.static(path.join(__dirname, 'public', 'postimage')
 
 // Routes
 app.use('/api', userRoutes);
+app.use('/api', postRoutes);
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
