@@ -26,8 +26,8 @@ const storage = multer.diskStorage({
 
 const postimage = multer({storage: storage});
 
-const routes = function (app) {
-    app.get('/post', async function(req,res){
+// const routes = function (app) {
+    router.get('/post', async function(req,res){
 		try{
 			let post = await Post.find().populate("tag").populate('user').lean();
 			res.json(post)
@@ -37,7 +37,7 @@ const routes = function (app) {
 		}
 	});
 
-	app.get('/post/:id', async function(req,res){
+	router.get('/post/:id', async function(req,res){
 		try{
 			let {id} = req.params;
 			let post = await Post.findById(id).populate('tag').populate('user')
@@ -60,7 +60,7 @@ const routes = function (app) {
 		}
 	});
 	
-	app.put('/post/:id', async function(req,res){
+	router.put('/post/:id', async function(req,res){
 		try{
 			let {id} = req.params
 			let post = await Post.findById(id)
@@ -80,7 +80,7 @@ const routes = function (app) {
 		}
 	});
     
-    app.delete('/post/:id', async function(req,res){
+    router.delete('/post/:id', async function(req,res){
 		try{
 			let {id} = req.params
 			let post = await Post.findOneAndDelete({ _id: id });
@@ -93,7 +93,7 @@ const routes = function (app) {
 		}
 	});
 	  
-	app.put('/likes/:id', async (req, res) => {
+	router.put('/likes/:id', async (req, res) => {
 		try {
 		  const { id } = req.params;
 		  console.log('Request received to like post with ID:', id);
@@ -136,7 +136,7 @@ const routes = function (app) {
 		}
 	  });	  
 
-	app.put('/unlike/:id', async (req, res) => {
+	router.put('/unlike/:id', async (req, res) => {
 		try {
 		  const { id } = req.params;
 		  const post = await Post.findById(id);
@@ -171,7 +171,7 @@ const routes = function (app) {
 		}
 	  });
 
-	app.post('/comment/:id', async (req, res) => {
+	router.post('/comment/:id', async (req, res) => {
 		try {
 			const { id } = req.params;
 			const post = await Post.findById(id).populate('user');
@@ -202,7 +202,7 @@ const routes = function (app) {
 		}
 	});
 
-    app.get("/comments", async function (req, res) {
+    router.get("/comments", async function (req, res) {
     try {
         const comments = await Post.find()
             .populate('user')
@@ -218,7 +218,7 @@ const routes = function (app) {
     }
     });
 
-	app.get('/comment/:id', async (req,res)=>{
+	router.get('/comment/:id', async (req,res)=>{
 		try {
 		  const {id} = req.params;
 		let post = await Post.findById(id)
@@ -228,7 +228,7 @@ const routes = function (app) {
 		}
 	})
 	
-	app.post('/reply/:id', async (req, res) => {
+	router.post('/reply/:id', async (req, res) => {
 		try {
 			const { id } = req.params;
 			const post = await Post.findById(id).populate('user');
@@ -267,7 +267,7 @@ const routes = function (app) {
 		}
 	});
 
-	app.put('/replylikes/:id/:commentId', async (req, res) => {
+	router.put('/replylikes/:id/:commentId', async (req, res) => {
 		try {
 			const { id, commentId } = req.params;
 			console.log('Request received to like comment with ID:', commentId, 'in post with ID:', id);
@@ -306,7 +306,7 @@ const routes = function (app) {
 		}
 	});
 	
-	app.put('/replyunlikes/:id/:commentId', async (req, res) => {
+	router.put('/replyunlikes/:id/:commentId', async (req, res) => {
 		try {
 			const { id, commentId } = req.params;
 			console.log('Request received to unlike comment with ID:', commentId, 'in post with ID:', id);
@@ -346,7 +346,7 @@ const routes = function (app) {
 	});
 	
 	  
-	app.get('/post/tag/:tagId', async (req, res) => {
+	router.get('/post/tag/:tagId', async (req, res) => {
 		try {
 		  const tagId = req.params.tagId;
 		  const post = await Post.find({ tag: tagId });
@@ -356,7 +356,7 @@ const routes = function (app) {
 		}
 	  });
 	
-	app.get('/post/:id/views', async (req, res) => {
+	router.get('/post/:id/views', async (req, res) => {
 		try {
 			const { id } = req.params;
 			console.log('Received ID:', id);
@@ -392,7 +392,7 @@ const routes = function (app) {
 		}
 	});
 	
-	app.post('/post/:id/increment-view', async (req, res) => {
+	router.post('/post/:id/increment-view', async (req, res) => {
 		try {
 			const { id } = req.params;
 			const post = await Post.findById(id);
@@ -418,7 +418,7 @@ const routes = function (app) {
 		}
 	});	
 
-	app.get('/posts-with-users', async function(req, res) {
+	router.get('/posts-with-users', async function(req, res) {
 		try {
 		  let postsWithUsers = await Post.find()
 			.populate('user')
@@ -431,7 +431,7 @@ const routes = function (app) {
 		}
 	});
   
-    app.post('/post', postimage.any(), async function(req, res) {
+    router.post('/post', postimage.any(), async function(req, res) {
 	try {
 	  console.log('received request', req.body);
 	  console.log('received files', req.files);
@@ -471,6 +471,6 @@ const routes = function (app) {
 	  res.status(500).send(err.message);
 	}
   });
-}
+// }
 
-module.exports = routes
+module.exports = router;

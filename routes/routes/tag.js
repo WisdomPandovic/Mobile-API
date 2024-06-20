@@ -2,9 +2,11 @@ const Tag = require("../../models/tag");
 const multer = require("multer");
 const path = require("path");
 const PORT = 3007;
+const express = require('express');
+const router = express.Router();
 
-const routes = function (app) {
-    app.get('/tag', async function(req,res){
+// const routes = function (app) {
+    router.get('/tag', async function(req,res){
 		try{
 			let tag = await Tag.find().populate('post').lean()
 			console.log('Populated tags with posts:', tag);
@@ -14,7 +16,7 @@ const routes = function (app) {
 		}
 	});
 	  
-	app.get('/tag/:id', async function(req,res){
+	router.get('/tag/:id', async function(req,res){
 		try{
 		 let {id} = req.params
 		 let tag = await Tag.findById(id).populate('post');
@@ -38,7 +40,7 @@ const routes = function (app) {
 		}
 	 })
 
-	app.put('/tag/:id', async function(req,res){
+	router.put('/tag/:id', async function(req,res){
 		try{
 			let {id} = req.params
 			let tag = await Tag.findById(id)
@@ -58,7 +60,7 @@ const routes = function (app) {
 		}
 	});
     
-    app.delete('/tag/:id', async function(req,res){
+    router.delete('/tag/:id', async function(req,res){
 		try{
 			let {id} = req.params
 			let tag = await Tag.findOneAndDelete({ _id: id })
@@ -73,7 +75,7 @@ const routes = function (app) {
 			}
 	});
 
-	app.post('/tag', async (req, res) => {
+	router.post('/tag', async (req, res) => {
 		try {
 		  const tagData = req.body;
 		  if (typeof tagData.name === 'string' && tagData.name.startsWith('{') && tagData.name.endsWith('}')) {
@@ -94,5 +96,5 @@ const routes = function (app) {
 	  });
 	  
  
-}
-module.exports = routes
+// }
+module.exports = router
