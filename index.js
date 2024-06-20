@@ -50,10 +50,10 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'default-secret';
 
 // Connect to MongoDB
 mongoose.connect(DB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    ssl: true,  // Set to false if SSL is not required
-    sslValidate: false  // Set to true to enable SSL certificate validation
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  tls: true,  // Use TLS for secure connections
+  tlsAllowInvalidCertificates: true  // Allow invalid certificates
 });
 mongoose.connection.on('open', () => console.log("Server connected"));
 mongoose.connection.on('error', (err) => console.log(err));
