@@ -8,10 +8,16 @@ const session = require('express-session');
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(session({
-  secret: '86910a557aa1ecc5021d0ed6367aa6c154ef652366c1c20e8965ba57b5a105c5', // Set a secret key for session encryption
+  secret: process.env.SESSION_SECRET, // Use the secret from environment variables
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Set secure cookies in production
+    httpOnly: true,
+    maxAge: 3600000 // 1 hour
+  }
 }));
 
 const routes = function(app){
@@ -121,7 +127,7 @@ const routes = function(app){
 			console.log("Retrieved hashed password from the database:", user.password);
 	
 			// Compare the plain text password from the request with the hashed password stored in the database
-			const isPasswordValid = await bcrypt.compare(password, user.password);
+			const isPasswordValid = await bcrypt.compareSync(password, user.password);
 			console.log("Password comparison result:", isPasswordValid);
 	
 			if (isPasswordValid) {
@@ -142,3 +148,5 @@ const routes = function(app){
 }
 
 module.exports = routes
+  
+  module.exports = routes;
