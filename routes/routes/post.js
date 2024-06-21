@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const multer = require("multer");
 const path = require("path");
 const PORT = 3007;
-const FILE_PATH = `http://localhost:${PORT}/postimage/`;
+// const FILE_PATH = `http://localhost:${PORT}/postimage/`;
+const FILE_PATH = `http://your-server-url-or-ip:3007/postimage/`;
 const User=require("../../models/user");
 const Tag=require("../../models/tag");
 const Like = require("../../models/like"); 
@@ -437,13 +438,24 @@ const postimage = multer({storage: storage});
 		  console.log('received files', req.files);
 	  
 		  const { title, description, tag, user } = req.body;
+
+		  // Validate user ID
+		  if (!ObjectId.isValid(user)) {
+			console.error('Invalid user ID');
+			return res.status(400).json({ msg: 'Invalid user ID' });
+		  }
 	  
 		  // Validate or find tag by name
 		  let existingTag = await Tag.findOne({ name: tag });
 	  
 		  if (!existingTag) {
-			console.error('Tag not found');
-			return res.status(404).json({ msg: 'Tag not found' });
+			console.log('Tag not found, creating new tag...');
+	  
+			// Create a new tag if it doesn't exist
+			existingTag = new Tag({ name: tag });
+	  
+			// Save the new tag to the database
+			await existingTag.save();
 		  }
 	  
 		  let post = new Post({
