@@ -1,4 +1,4 @@
-# imgurify-api
+# mobile-api
 # Backend API
 
 The backend of the Imgurify Project is built using Node.js, Express, and Mongoose. It provides endpoints to manage posts, tags, users, comments, and likes.
